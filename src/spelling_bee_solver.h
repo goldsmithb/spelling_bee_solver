@@ -71,8 +71,8 @@ int check_word(char *ls, char *word, int len);
  * 
  * f : dictionary txt file we are searching for anagrams in.
  * 
- * return : array of strings representing all the found anagrams.
+ * return : array of strings representing all the found anagrams. TODO: fix this.
  * */
-char **find_anagrams(game_t *game, FILE *f);
+int find_anagrams(game_t *game, FILE *f);
 
 #endif

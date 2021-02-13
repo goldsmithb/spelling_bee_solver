@@ -29,7 +29,7 @@ game_t *init_game(char *in_letters, int len)
     game_t *game = malloc(sizeof(game_t));
     if (!game)
     {
-        fprintf(stderr, "ERROR: Malloc erro\n");
+        fprintf(stderr, "ERROR: Malloc error\n");
         exit(-1); // TODO: Quit the game
     }
 
@@ -70,34 +70,41 @@ int check_word(char *ls, char *word, int len)
     return score;
 }
 
-char **find_anagrams(game_t *game, FILE *f)
+int find_anagrams(game_t *game, FILE *f)
 {
     char *word = NULL;
-    /* This value is arbitary; getline will allocate as much 
+    /* The n value is arbitary; getline will allocate as much 
        space as needed to store the line as long as word is NULL */
-    int n = 0;
-    char *ls = game->letters; // For ease of acces
-    char *grams[MAX_GRAMS]; // TODO: free
-    int j = 0; // For indexing grams 
+    size_t n = 0;
+    char *ls = game->letters; // For ease of access
+    /* Return value grams is a pointer to an array of strings, 
+       meaning it is a (char ***), pointer to an array of char *'s. */
+    char *grams[MAX_GRAMS]; // TODO: free each string
+    int j = 0; // For indexing grams
+    int score;
 
     while (getline(&word, &n, f) > 0)
     {
         /* Check for anagram by checking if dictionary entry includes
-           only letters from game->letters, and that it contains the
+           only letters from game->letters, AND that it contains the
            center letter, game-letters[0] */
-        /* First, check for center letter */
         int len = strlen(word) - 1; // word ends '\n'
 
-        if (check_word(ls, word, len))
+        if ((score = check_word(ls, word, len)) > 0)
         {
             /* Anagram found! Append it to the list of grams */
+            fprintf(stdout, "%dpts\t%s\n", score, word);
             grams[j++] = strdup(word);
+            game->score += score;
         }
+
         /* Set word NULL again for getline*/
         word = NULL;
     }
 
-    free(word);    
+    free(word);
+
+    return 0;
 }
 
 int main(int argc, char **argv)
@@ -121,22 +128,23 @@ int main(int argc, char **argv)
         {
         case 'l' :
             letters_str = strdup(optarg); // TODO: free
+            break;
         default :
-            fprintf(stderr, "ERROR: unknown option");
+            fprintf(stderr, "ERROR: unknown option\n");
         }
     }
 
     if (letters_str == NULL)
     {
-        fprintf(stderr, "ERROR: No letters given");
+        fprintf(stderr, "ERROR: No letters given\n");
         return -1;
     }
 
+    /* Open the dictionary */
     FILE *f;
-    if ((f = fopen("../data/spellfind_anagramsing_bee_dict.txt", "r")) == NULL)
+    if ((f = fopen("../data/spelling_bee_dict.txt", "r")) == NULL)
     {
-        fprintf(stderr, "ERROR: spelling_bee_dict.txt not detected. Please \
-                         run the script make_dict.py and try again.");
+        fprintf(stderr, "ERROR: spelling_bee_dict.txt not detected. Please run the script make_dict.py and try again.\n");
         return -1;
     }
 
@@ -144,7 +152,15 @@ int main(int argc, char **argv)
     int len = strlen(letters_str);
     game_t *game = init_game(letters_str, len);
 
-    game->score = find_anagrams(game, f);
+    /* "Play"! */
+    find_anagrams(game, f);
+
+    /* Free data */
+    free(letters_str);
 
     return 0;
 }
+
+/* TODO (one day...) :
+ find a way to return an array of strings from find_anagrams().
+ For now, it does not seem feasible (too confusing and unnecessary). */
