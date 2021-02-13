@@ -20,24 +20,7 @@
  * words_alpha.txt dictionary from https://github.com/dwyl/english-words/.
  * */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdbool.h>
-#include spelling_bee_solver.h
-
-/* Assume that at most 500 anagrams will be found */
-#define MAX_GRAMS 500
-/* Assume the game is played with 7 letters */
-#define NUM_LETTERS 7
-
-/* game_t struct */
-typedef struct game
-{
-    char letters[7];
-    int score;
-} game_t;
+#include "spelling_bee_solver.h"
 
 
 /* Init game wrapper */
@@ -69,7 +52,7 @@ bool contains_letter(char l, char *word, int len)
     return false;
 }
 
-int is_valid_word(char *ls, char *word, int len)
+int check_word(char *ls, char *word, int len)
 {
     /* First, check for center letter */
     if (!contains_letter(ls[0], word, len))
@@ -89,7 +72,6 @@ int is_valid_word(char *ls, char *word, int len)
 
 char **find_anagrams(game_t *game, FILE *f)
 {
-    /* Go through line by line and try to see if the string is a valid anagram. */
     char *word = NULL;
     /* This value is arbitary; getline will allocate as much 
        space as needed to store the line as long as word is NULL */
@@ -106,7 +88,7 @@ char **find_anagrams(game_t *game, FILE *f)
         /* First, check for center letter */
         int len = strlen(word) - 1; // word ends '\n'
 
-        if (is_valid_word(ls, word, len))
+        if (check_word(ls, word, len))
         {
             /* Anagram found! Append it to the list of grams */
             grams[j++] = strdup(word);
