@@ -24,6 +24,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdbool.h>
+
+/* Assume that at most 500 anagrams will be found */
+#define MAX_GRAMS 500
+/* Assume the game is played with 7 letters */
+#define NUM_LETTERS 7
 
 /* game_t struct */
 typedef struct game
@@ -34,7 +40,7 @@ typedef struct game
 
 
 /* Init game wrapper */
-game_t *init_game(char *letters, int len)
+game_t *init_game(char *in_letters, int len)
 {
     game_t *game = malloc(sizeof(game_t));
     if (!game)
@@ -43,19 +49,80 @@ game_t *init_game(char *letters, int len)
         exit(-1); // TODO: Quit the game
     }
 
+    /* Copy the letters from input, disregard '\0' */
+    for (int i = 0; i < len; i++)
+        game->letters[i] = in_letters[i];
 
-
+    game->score = 0;
 
     return game;
 }
 
+bool contains_letter(char l, char *word, int len)
+{
+    for (int i = 0; i < len; i++)
+    {
+        if (word[i] == l)
+            return true;
+    }
+    return false;
+}
+
+int is_valid_word(char *ls, char *word, int len)
+{
+    /* First, check for center letter */
+    if (!contains_letter(ls[0], word, len))
+        return 0;
+
+    /* Good. Now check for the other letters */
+    for (int i = 0; i < len; i++)
+    {
+        if (!contains_letter(word[i], ls, NUM_LETTERS))
+            return 0;
+    }
+
+    int score = 1;
+
+    return score;
+}
+
+char **find_anagrams(game_t *game, FILE *f)
+{
+    /* Go through line by line and try to see if the string is a valid anagram. */
+    char *word = NULL;
+    /* This value is arbitary; getline will allocate as much 
+       space as needed to store the line as long as word is NULL */
+    int n = 0;
+    char *ls = game->letters; // For ease of acces
+    char *grams[MAX_GRAMS]; // TODO: free
+    int j = 0; // For indexing grams 
+
+    while (getline(&word, &n, f) > 0)
+    {
+        /* Check for anagram by checking if dictionary entry includes
+           only letters from game->letters, and that it contains the
+           center letter, game-letters[0] */
+        /* First, check for center letter */
+        int len = strlen(word) - 1; // word ends '\n'
+
+        if (is_valid_word(ls, word, len))
+        {
+            /* Anagram found! Append it to the list of grams */
+            grams[j++] = strdup(word);
+        }
+        /* Set word NULL again for getline*/
+        word = NULL;
+    }
+
+    free(word);    
+}
 
 int main(int argc, char **argv)
 {
     /* command line options:
      * -l,letters abcdefg -- the seven letters in the
-     *                             spelling bee game. The first
-     *                             letter must be the center letter.
+     *                       spelling bee game. The first
+     *                       letter must be the center letter.
      */
 
     /* Initialize variables */    
@@ -82,17 +149,19 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    int fd;
-    if ((fd = open("../data/spelling_bee_dict.txt", O_RDONLY)) < 0)
+    FILE *f;
+    if ((f = fopen("../data/spellfind_anagramsing_bee_dict.txt", "r")) == NULL)
     {
         fprintf(stderr, "ERROR: spelling_bee_dict.txt not detected. Please \
-                         run the script <><><>.py and try again");
+                         run the script make_dict.py and try again.");
         return -1;
     }
 
     /* Initialize game data */
     int len = strlen(letters_str);
     game_t *game = init_game(letters_str, len);
+
+    game->score = find_anagrams(game, f);
 
     return 0;
 }
