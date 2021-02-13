@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include spelling_bee_solver.h
 
 /* Assume that at most 500 anagrams will be found */
 #define MAX_GRAMS 500

@@ -1,0 +1,5 @@
+#ifndef SPELLING_BEE_SOLVER
+#define SPELLING_BEE_SOLVER
+
+
+#endif
